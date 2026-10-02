@@ -38,7 +38,7 @@ if st.button("🚀 Optimizar mi Canasta", type="primary", use_container_width=Tr
             "items": items
         }
         try:
-            res = requests.post("http://127.0.0.1:8000/optimize", json=payload)
+            res = requests.post("https://super-optimizer-backend.onrender.com/optimize", json=payload)
             if res.status_code == 200:
                 data = res.json()
                 
