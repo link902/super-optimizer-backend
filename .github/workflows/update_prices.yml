@@ -1,1 +1,31 @@
+name: Actualizacion Automatica de Precios
 
+on:
+  schedule:
+    # Se ejecuta todos los días a las 04:00 AM (hora UTC)
+    - cron: '0 4 * * *'
+  workflow_dispatch: # Permite activarlo manualmente con un clic si lo necesitas
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          pip install requests supabase beautifulsoup4
+
+      - name: Ejecutar script de scraping y subida
+        env:
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python updater.py
