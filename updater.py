@@ -292,9 +292,24 @@ def main() -> int:
             failures += 1
             continue
         if response.status_code != 200:
-            print(f"SKIP id={product_id}: ScraperAPI devolvió HTTP {response.status_code}; no se actualiza.")
-            failures += 1
-            continue
+            first_status = response.status_code
+            # Retry once without headless rendering; some official product pages
+            # return provider-side 5xx only on rendered requests.
+            try:
+                retry_response = session.get(
+                    "https://api.scraperapi.com/",
+                    params={"api_key": scraper_key, "url": spec["source_url"], "country_code": "cl"},
+                    timeout=100,
+                )
+            except requests.RequestException:
+                retry_response = None
+            if retry_response is None or retry_response.status_code != 200:
+                final_status = retry_response.status_code if retry_response is not None else "network error"
+                print(f"SKIP id={product_id}: ScraperAPI render HTTP {first_status}; no-render retry {final_status}; no se actualiza.")
+                failures += 1
+                continue
+            response = retry_response
+            print(f"RETRY id={product_id}: respuesta sin render; validar ficha y precio antes de guardar.")
         try:
             parsed = parse_product_page(response.text, product_id)
         except ValueError as exc:
