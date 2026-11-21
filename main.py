@@ -38,6 +38,19 @@ def get_items():
     response = supabase.table("generic_items").select("*").execute()
     return response.data
 
+@app.get("/pilot-prices")
+def get_pilot_prices():
+    # Solo lectura: expone los cinco registros existentes del piloto; no permite escrituras.
+    pilot_ids = [240, 246, 250, 251, 252]
+    response = (
+        supabase.table("products")
+        .select("id,supermarket_id,brand,product_name,price,regular_price,offer_type,offer_details,conditional_offer,price_checked_at,source_url")
+        .in_("id", pilot_ids)
+        .order("id")
+        .execute()
+    )
+    return response.data
+
 @app.post("/optimize")
 def optimize_cart(request: OptimizeRequest):
     item_ids = [item.generic_item_id for item in request.items]

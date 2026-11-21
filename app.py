@@ -8,6 +8,47 @@ API_URL = "https://super-optimizer-backend.onrender.com"
 st.title("🛒 Optimizador Inteligente de Compras")
 st.caption("Arma tu lista de compras personalizada y descubre cuánto ahorras cambiando a marcas equivalentes.")
 
+@st.cache_data(ttl=60)
+def get_pilot_prices():
+    try:
+        response = requests.get(f"{API_URL}/pilot-prices", timeout=18)
+        if response.status_code == 200:
+            return response.json(), None
+        return [], f"El backend respondió HTTP {response.status_code}."
+    except requests.exceptions.RequestException:
+        return [], "El backend no respondió todavía; los precios del catálogo no se modificaron."
+
+def clp(value):
+    if value is None:
+        return "—"
+    return f"${int(value):,} CLP".replace(",", ".")
+
+st.subheader("Precios y ofertas automáticas · piloto de 5 lácteos")
+pilot_prices, pilot_error = get_pilot_prices()
+if pilot_error:
+    st.info(pilot_error)
+elif not pilot_prices:
+    st.info("El backend aún no devolvió los cinco productos del piloto.")
+else:
+    display_rows = []
+    for item in pilot_prices:
+        store = "Líder" if item.get("supermarket_id") == 1 else "Jumbo"
+        general = "Oferta general" if item.get("offer_type") == "general" else "Sin oferta general confirmada"
+        display_rows.append({
+            "Supermercado": store,
+            "Producto": f"{item.get('brand') or ''} · {item.get('product_name') or ''}",
+            "Precio vigente": clp(item.get("price")),
+            "Precio normal": clp(item.get("regular_price")),
+            "Oferta general": general,
+            "Beneficio condicionado": item.get("conditional_offer") or "—",
+            "Consultado (UTC)": item.get("price_checked_at") or "Pendiente de actualización",
+        })
+    st.dataframe(display_rows, use_container_width=True, hide_index=True)
+    with st.expander("Fichas oficiales de los productos piloto"):
+        for item in pilot_prices:
+            store = "Líder" if item.get("supermarket_id") == 1 else "Jumbo"
+            st.markdown(f"- {store}: [{item.get('product_name')}]({item.get('source_url')})")
+
 # 1. Selector de supermercado
 st.sidebar.header("Supermercado de Destino")
 super_options = {
