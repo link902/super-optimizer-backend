@@ -23,12 +23,103 @@ def clp(value):
         return "—"
     return f"${int(value):,} CLP".replace(",", ".")
 
-st.subheader("Precios y ofertas automáticas · piloto de 5 lácteos")
+st.subheader("Precios y ofertas automáticas · piloto de 7 lácteos")
 pilot_prices, pilot_error = get_pilot_prices()
 if pilot_error:
     st.info(pilot_error)
 elif not pilot_prices:
-    st.info("El backend aún no devolvió los cinco productos del piloto.")
+    st.info("El backend aún no devolvió los siete productos del piloto.")
+else:
+    display_rows = []
+    for item in pilot_prices:
+        store = "Líder" if item.get("supermarket_id") == 1 else "Jumbo"
+        general = "Oferta general" if item.get("offer_type") == "general" else "Sin oferta general confirmada"
+        display_rows.append({
+            "Supermercado": store,
+            "Producto": f"{item.get('brand') or ''} · {item.get('product_name') or ''}",
+            "Precio vigente": clp(item.get("price")),
+            "Precio normal": clp(item.get("regular_price")),
+            "Oferta general": general,
+            "Beneficio condicionado": item.get("conditional_offer") or "—",
+            "Consultado (UTC)": item.get("price_checked_at") or "Pendiente de actualización",
+        })
+    st.dataframe(display_rows, use_container_width=True, hide_index=True)
+    with st.expander("Fichas oficiales de los productos piloto"):
+        for item in pilot_prices:
+            store = "Líder" if item.get("supermarket_id") == 1 else "Jumbo"
+            st.markdown(f"- {store}: [{item.get('product_name')}]({item.get('source_url')})")
+
+# 1. Selector de supermercado
+st.sidebar.header("Supermercado de Destino")
+super_options = {
+    "Líder (Walmart)": 1,
+    "Jumbo (Cencosud)": 2
+}
+selected_super_name = st.sidebar.selectbox("Selecciona dónde vas a comprar:", list(super_options.keys()))
+super_id = super_options[selected_super_name]
+
+# 2. Obtener catálogo dinámico desde el backend
+@st.cache_data(ttl=30)
+def get_catalog():
+    try:
+        r = requests.get(f"{API_URL}/items", timeout=12)
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
+    return []
+
+catalog = get_catalog()
+
+if not catalog:
+    st.warning("Cargando catálogo desde el servidor... Si tarda unos segundos, es porque el backend gratuito de Render está despertando.")
+else:
+    # Agrupar ítems por categoría
+    categories = sorted(list(set(item["category"] for item in catalog)))
+    
+    st.subheader("1. Selecciona los productos de tu despensa")
+    
+    # Selector filtrado o global
+    options_map = {f"{item['name']} — [{item['category']}]": item["id"] for item in catalog}
+    
+    selected_items = st.multiselect(
+        "Busca o elige los productos que necesitas comprar:",
+        options=list(options_map.keys()),
+        default=[list(options_map.keys())[0], list(options_map.keys())[1]] if len(options_map) >= 2 else []
+    )
+
+    # 3. Asignar cantidades por producto
+    order_items = []
+import requests
+
+st.set_page_config(page_title="Optimizador de Despensa", page_icon="🛒", layout="wide")
+
+API_URL = "https://super-optimizer-backend.onrender.com"
+
+st.title("🛒 Optimizador Inteligente de Compras")
+st.caption("Arma tu lista de compras personalizada y descubre cuánto ahorras cambiando a marcas equivalentes.")
+
+@st.cache_data(ttl=60)
+def get_pilot_prices():
+    try:
+        response = requests.get(f"{API_URL}/pilot-prices", timeout=18)
+        if response.status_code == 200:
+            return response.json(), None
+        return [], f"El backend respondió HTTP {response.status_code}."
+    except requests.exceptions.RequestException:
+        return [], "El backend no respondió todavía; los precios del catálogo no se modificaron."
+
+def clp(value):
+    if value is None:
+        return "—"
+    return f"${int(value):,} CLP".replace(",", ".")
+
+st.subheader("Precios y ofertas automáticas · piloto de 7 lácteos")
+pilot_prices, pilot_error = get_pilot_prices()
+if pilot_error:
+    st.info(pilot_error)
+elif not pilot_prices:
+    st.info("El backend aún no devolvió los siete productos del piloto.")
 else:
     display_rows = []
     for item in pilot_prices:
