@@ -1,4 +1,4 @@
-"""Daily, allowlisted price refresh for the eleven verified Super-Optimizer rows (7 dairy, 4 canned fish).
+"""Daily, allowlisted price refresh for 23 verified Super-Optimizer rows.
 
 Only product pages that were manually verified and are pinned below can be fetched.
 Failed, ambiguous, identity-mismatched, or unparseable pages are skipped without
@@ -86,6 +86,26 @@ PILOT = {
         "name_tokens": ["filete", "jurel", "natural"], "size_regex": r"80\s*g(?![a-z])",
         "size_ml": 80,
     },
+    4: {
+        "supermarket_id": 1, "brand": "Colun", "brand_aliases": ["colun"],
+        "source_url": "https://super.lider.cl/ip/leche/00780292077754",
+        "name_tokens": ["leche", "entera"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000,
+    },
+    11: {
+        "supermarket_id": 2, "brand": "Cuisine & Co", "brand_aliases": ["cuisine & co"],
+        "source_url": "https://www.jumbo.cl/leche-entera-1-l-cuisine-and-co-1858321/p",
+        "name_tokens": ["leche", "entera"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000,
+    },
+    287: {"supermarket_id": 1, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://super.lider.cl/ip/leche/leche-entera/00780461747028", "name_tokens": ["leche", "entera"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    288: {"supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://www.jumbo.cl/leche-descremada-colun-1-l-2/p", "name_tokens": ["leche", "descremada"], "exclude_tokens": ["semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    289: {"supermarket_id": 1, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://super.lider.cl/ip/leche/leche-semidescremada-natural-caja/00780292000009", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    290: {"supermarket_id": 1, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://super.lider.cl/ip/leche/leche-descremada/00780461747030", "name_tokens": ["leche", "descremada"], "exclude_tokens": ["semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    291: {"supermarket_id": 2, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://www.jumbo.cl/leche-descremada-surlat-b-a-1l-1991552/p", "name_tokens": ["leche", "descremada"], "exclude_tokens": ["semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    292: {"supermarket_id": 2, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://www.jumbo.cl/leche-entera-surlat-b-a-1l-1991554/p", "name_tokens": ["leche", "entera"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    293: {"supermarket_id": 1, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://super.lider.cl/ip/leche/leche-descremada-natural-caja-1-l/00780292000008", "name_tokens": ["leche", "descremada"], "exclude_tokens": ["semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    294: {"supermarket_id": 2, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://www.jumbo.cl/leche-semidesc-surlat-b-a-1l-1991553/p", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    295: {"supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://www.jumbo.cl/leche-colun-semi-descremada-1-litro/p", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    296: {"supermarket_id": 1, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://super.lider.cl/ip/leche/leche-semidescremada/00780461747029", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
 }
 PRICE_KEYS = {"price", "saleprice", "currentprice", "sellingprice", "offerprice", "priceamount", "finalprice"}
 REGULAR_KEYS = {"regularprice", "originalprice", "listprice", "oldprice", "wasprice", "previousprice", "pricebeforediscount", "pricebeforediscount"}
@@ -199,6 +219,8 @@ def parse_product_page(html: str, product_id: int) -> dict:
         raise ValueError("ficha no coincide con producto/tipo esperado")
     if not re.search(spec["size_regex"], identity, re.I):
         raise ValueError("formato/gramaje no coincide")
+    if any(token in identity for token in spec.get("exclude_tokens", [])):
+        raise ValueError("tipo de leche no coincide")
     hostname = (urlparse(spec["source_url"]).hostname or "").lower()
     if (spec["supermarket_id"] == 1 and "lider.cl" not in hostname) or (spec["supermarket_id"] == 2 and "jumbo.cl" not in hostname):
         raise ValueError("supermercado de la ficha no coincide")
@@ -302,7 +324,7 @@ def main() -> int:
     rows = db.table("products").select("id,supermarket_id,brand,product_name,price,unit_price,source_url,sku").in_("id", list(PILOT)).execute().data
     indexed = {int(row["id"]): row for row in rows}
     if set(indexed) != set(PILOT):
-        print("ERROR: no se recibieron las once filas verificadas; no se insertó ninguna fila.")
+        print("ERROR: no se recibieron las 23 filas verificadas; no se insertó ninguna fila.")
         return 3
 
     session = requests.Session()
