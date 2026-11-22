@@ -37,6 +37,10 @@ VERIFIED_PILOT = {
     294: (2, 76, "Surlat", "Leche Semidescremada Surlat 1 L", "https://www.jumbo.cl/leche-semidesc-surlat-b-a-1l-1991553/p"),
     295: (2, 76, "Colun", "Leche Colun Semidescremada 1 L", "https://www.jumbo.cl/leche-colun-semi-descremada-1-litro/p"),
     296: (1, 76, "Surlat", "Leche Semidescremada Surlat 1 L", "https://super.lider.cl/ip/leche/leche-semidescremada/00780461747029"),
+    297: (1, 78, "Oikos", "Yoghurt Griego Natural sin Azúcar Pote 150 g", "https://super.lider.cl/ip/yoghurt/yoghurt-griego-natural-sin-azucar-pote/00780295500779"),
+    298: (2, 78, "Oikos", "Yogurt Griego Natural Sin Endulzar Oikos Danone 150 g", "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p"),
+    299: (1, 79, "Colun", "Yoghurt Origen Natural 150 g", "https://super.lider.cl/ip/yoghurt/yoghurt-origen-natural/00780292001206"),
+    300: (2, 79, "Colun", "Yogurt Natural Colun Origen 150 g", "https://www.jumbo.cl/yogurt-natur-150gr-2065862/p"),
 }
 
 def is_verified_pilot(row):
