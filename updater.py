@@ -1,4 +1,4 @@
-"""Daily, allowlisted price refresh for the five Super-Optimizer dairy pilot rows.
+"""Daily, allowlisted price refresh for the seven Super-Optimizer dairy pilot rows.
 
 Only product pages that were manually verified and are pinned below can be fetched.
 Failed, ambiguous, identity-mismatched, or unparseable pages are skipped without
@@ -18,7 +18,7 @@ import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
 
-# These are the five already-existing rows; this job never inserts product rows.
+# These are the seven already-existing rows; this job never inserts product rows.
 PILOT = {
     240: {
         "supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"],
@@ -49,6 +49,18 @@ PILOT = {
         "source_url": "https://www.jumbo.cl/leche-evaporada-ideal-390g-1976555/p",
         "name_tokens": ["leche", "evaporada"], "size_regex": r"(?<!\d)390\s*g(?![a-z])",
         "size_ml": 390,
+    },
+    281: {
+        "supermarket_id": 2, "brand": "Soprole", "brand_aliases": ["soprole"],
+        "source_url": "https://www.jumbo.cl/queso-crema-dos-alamos-soprole-200-g/p",
+        "name_tokens": ["queso", "crema"], "size_regex": r"(?<!\d)200\s*g(?![a-z])",
+        "size_ml": 200,
+    },
+    282: {
+        "supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"],
+        "source_url": "https://www.jumbo.cl/queso-crema-colun-200-g/p",
+        "name_tokens": ["queso", "crema"], "size_regex": r"(?<!\d)200\s*g(?![a-z])",
+        "size_ml": 200,
     },
 }
 PRICE_KEYS = {"price", "saleprice", "currentprice", "sellingprice", "offerprice", "priceamount", "finalprice"}
@@ -266,7 +278,7 @@ def main() -> int:
     rows = db.table("products").select("id,supermarket_id,brand,product_name,price,unit_price,source_url,sku").in_("id", list(PILOT)).execute().data
     indexed = {int(row["id"]): row for row in rows}
     if set(indexed) != set(PILOT):
-        print("ERROR: no se recibieron las cinco filas piloto existentes; no se insertó ninguna fila.")
+        print("ERROR: no se recibieron las siete filas piloto existentes; no se insertó ninguna fila.")
         return 3
 
     session = requests.Session()
