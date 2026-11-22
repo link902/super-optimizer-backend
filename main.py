@@ -25,6 +25,18 @@ VERIFIED_PILOT = {
     284: (2, 74, "Cuisine & Co", "Atún Lomitos en Agua 91 g drenado, 140 g neto", "https://www.jumbo.cl/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-2017687/p"),
     285: (1, 75, "San José", "Filete De Jurel Al Natural 125 g", "https://super.lider.cl/ip/pescados-y-mariscos/filete-de-jurel-al-natural/00780123500563"),
     286: (2, 75, "San José", "Filete Jurel San Jose Natural 80 g drenado", "https://www.jumbo.cl/filet-jurel-natur-2085295/p"),
+    4: (1, 2, "Colun", "Leche Entera UHT 1L Colun", "https://super.lider.cl/ip/leche/00780292077754"),
+    11: (2, 2, "Cuisine & Co", "Leche Entera 1L Cuisine & Co", "https://www.jumbo.cl/leche-entera-1-l-cuisine-and-co-1858321/p"),
+    287: (1, 2, "Surlat", "Leche Entera Surlat 1 L", "https://super.lider.cl/ip/leche/leche-entera/00780461747028"),
+    288: (2, 77, "Colun", "Leche Colun Descremada Natural 1 L", "https://www.jumbo.cl/leche-descremada-colun-1-l-2/p"),
+    289: (1, 76, "Colun", "Leche Semidescremada Natural Caja 1 L Colun", "https://super.lider.cl/ip/leche/leche-semidescremada-natural-caja/00780292000009"),
+    290: (1, 77, "Surlat", "Leche Descremada Surlat 1 L", "https://super.lider.cl/ip/leche/leche-descremada/00780461747030"),
+    291: (2, 77, "Surlat", "Leche Descremada Surlat 1 L", "https://www.jumbo.cl/leche-descremada-surlat-b-a-1l-1991552/p"),
+    292: (2, 2, "Surlat", "Leche Entera Surlat 1 L", "https://www.jumbo.cl/leche-entera-surlat-b-a-1l-1991554/p"),
+    293: (1, 77, "Colun", "Leche Descremada Natural Caja 1 L Colun", "https://super.lider.cl/ip/leche/leche-descremada-natural-caja-1-l/00780292000008"),
+    294: (2, 76, "Surlat", "Leche Semidescremada Surlat 1 L", "https://www.jumbo.cl/leche-semidesc-surlat-b-a-1l-1991553/p"),
+    295: (2, 76, "Colun", "Leche Colun Semidescremada 1 L", "https://www.jumbo.cl/leche-colun-semi-descremada-1-litro/p"),
+    296: (1, 76, "Surlat", "Leche Semidescremada Surlat 1 L", "https://super.lider.cl/ip/leche/leche-semidescremada/00780461747029"),
 }
 
 def is_verified_pilot(row):
