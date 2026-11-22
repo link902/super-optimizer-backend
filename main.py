@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from supabase import create_client, Client
 
 SUPABASE_URL = "https://djxjwxidzjtpgqdcnnlz.supabase.co"
@@ -10,6 +10,43 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(title="Grocery Optimizer API")
+
+# Allowlist: manually verified product rows only. Records outside this list remain
+# in Supabase but are hidden from the selector and excluded from comparisons.
+VERIFIED_PILOT = {
+    240: (2, 2, "Colun", "Leche Colun Entera 1 L", "https://www.jumbo.cl/leche-entera-colun-caja-1-l-natural/p"),
+    246: (1, 71, "Nestlé", "Crema de leche para batir y cocinar 200ml Nestlé", "https://www.lider.cl/ip/cremas/crema-de-leche-para-batir-y-cocinar-caja/00780295002232"),
+    250: (2, 71, "Colun", "Crema de leche Colun caja 200ml", "https://www.jumbo.cl/crema-de-leche-colun-caja-200-ml/p"),
+    251: (1, 65, "Líder", "Leche evaporada en tarro 410g Líder", "https://super.lider.cl/ip/reposteria/leche-evaporada-tarro/00040000766328"),
+    252: (2, 60, "Ideal", "Leche evaporada 390g Ideal", "https://www.jumbo.cl/leche-evaporada-ideal-390g-1976555/p"),
+    281: (2, 28, "Soprole", "Queso Crema Soprole 200 g", "https://www.jumbo.cl/queso-crema-dos-alamos-soprole-200-g/p"),
+    282: (2, 28, "Colun", "Queso Crema Colun 200 g", "https://www.jumbo.cl/queso-crema-colun-200-g/p"),
+    283: (1, 74, "Líder", "Atún Lomitos en Agua. Drenado 91 g - Neto 140 g", "https://super.lider.cl/ip/conservas/atun-lomitos-en-agua/00040000114316"),
+    284: (2, 74, "Cuisine & Co", "Atún Lomitos en Agua 91 g drenado, 140 g neto", "https://www.jumbo.cl/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-2017687/p"),
+    285: (1, 75, "San José", "Filete De Jurel Al Natural 125 g", "https://super.lider.cl/ip/pescados-y-mariscos/filete-de-jurel-al-natural/00780123500563"),
+    286: (2, 75, "San José", "Filete Jurel San Jose Natural 80 g drenado", "https://www.jumbo.cl/filet-jurel-natur-2085295/p"),
+}
+
+def is_verified_pilot(row):
+    try:
+        product_id = int(row.get("id") or 0)
+        price = int(row.get("price") or 0)
+    except (TypeError, ValueError):
+        return False
+    expected = VERIFIED_PILOT.get(product_id)
+    if not expected:
+        return False
+    supermarket_id, generic_item_id, brand, product_name, source_url = expected
+    return (
+        row.get("supermarket_id") == supermarket_id
+        and row.get("generic_item_id") == generic_item_id
+        and row.get("brand") == brand
+        and row.get("product_name") == product_name
+        and row.get("source_url") == source_url
+        and bool(row.get("price_checked_at"))
+        and price > 0
+    )
+
 
 # Habilitar CORS para permitir conexiones desde cualquier frontend en la web
 app.add_middleware(
@@ -33,39 +70,61 @@ def read_root():
     return {"status": "ok", "message": "Grocery Optimizer API funcionando en la nube"}
 
 @app.get("/items")
-def get_items():
-    # Obtener el catálogo de categorías genéricas para el buscador
-    response = supabase.table("generic_items").select("*").execute()
-    return response.data
+def get_items(supermarket_id: Optional[int] = None):
+    if supermarket_id not in (None, 1, 2):
+        raise HTTPException(status_code=400, detail="Supermercado no válido.")
+
+    query = (
+        supabase.table("products")
+        .select("id,supermarket_id,generic_item_id,brand,product_name,price,price_checked_at,source_url,in_stock")
+        .in_("id", list(VERIFIED_PILOT))
+    )
+    if supermarket_id is not None:
+        query = query.eq("supermarket_id", supermarket_id)
+    verified_rows = [row for row in query.execute().data if is_verified_pilot(row) and row.get("in_stock", True)]
+    item_ids = sorted({row["generic_item_id"] for row in verified_rows})
+    if not item_ids:
+        return []
+    items = supabase.table("generic_items").select("*").in_("id", item_ids).order("id").execute()
+    return items.data
 
 @app.get("/pilot-prices")
 def get_pilot_prices():
-    # Solo lectura: expone las filas verificadas del piloto; no permite escrituras.
-    pilot_ids = [240, 246, 250, 251, 252, 281, 282, 283, 284, 285, 286]
+    # Solo lectura: expone los registros con identidad, ficha y precio confirmados.
     response = (
         supabase.table("products")
-        .select("id,supermarket_id,brand,product_name,price,regular_price,offer_type,offer_details,conditional_offer,price_checked_at,source_url")
-        .in_("id", pilot_ids)
+        .select("id,supermarket_id,generic_item_id,brand,product_name,price,regular_price,offer_type,offer_details,conditional_offer,price_checked_at,source_url,in_stock")
+        .in_("id", list(VERIFIED_PILOT))
         .order("id")
         .execute()
     )
-    return response.data
+    return [row for row in response.data if is_verified_pilot(row)]
 
 @app.post("/optimize")
 def optimize_cart(request: OptimizeRequest):
+    if request.supermarket_id not in (1, 2):
+        raise HTTPException(status_code=400, detail="Supermercado no válido.")
     item_ids = [item.generic_item_id for item in request.items]
     quantities = {item.generic_item_id: item.quantity for item in request.items}
+    if not item_ids:
+        raise HTTPException(status_code=400, detail="Selecciona al menos un producto verificado.")
 
-    # Consultar productos directamente en la base de datos de Supabase
-    response = supabase.table("products")\
-        .select("*")\
-        .eq("supermarket_id", request.supermarket_id)\
-        .in_("generic_item_id", item_ids)\
+    # Consultar solo filas incluidas en el allowlist y validadas por identidad.
+    response = (
+        supabase.table("products")
+        .select("*")
+        .eq("supermarket_id", request.supermarket_id)
+        .in_("generic_item_id", item_ids)
+        .in_("id", list(VERIFIED_PILOT))
         .execute()
-    
-    rows = response.data
-    if not rows:
-        raise HTTPException(status_code=404, detail="No se encontraron productos para los parámetros dados.")
+    )
+    rows = [
+        row for row in response.data
+        if is_verified_pilot(row) and row.get("in_stock", True) and row.get("price") is not None
+    ]
+    available_ids = {row["generic_item_id"] for row in rows}
+    if not rows or any(gid not in available_ids for gid in item_ids):
+        raise HTTPException(status_code=404, detail="No hay ficha oficial y precio confirmado para todos los productos seleccionados.")
 
     optimal_cart = []
     baseline_cart = []
