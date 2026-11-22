@@ -56,26 +56,31 @@ selected_super_name = st.sidebar.selectbox("Selecciona dónde vas a comprar:", l
 super_id = super_options[selected_super_name]
 
 @st.cache_data(ttl=30)
-def get_catalog():
+def get_catalog(supermarket_id):
     try:
-        r = requests.get(f"{API_URL}/items", timeout=12)
+        r = requests.get(
+            f"{API_URL}/items",
+            params={"supermarket_id": supermarket_id},
+            timeout=12,
+        )
         if r.status_code == 200:
             return r.json()
-    except Exception:
+    except requests.exceptions.RequestException:
         pass
     return []
 
-catalog = get_catalog()
+catalog = get_catalog(super_id)
 if not catalog:
-    st.warning("Cargando catálogo desde el servidor... Si tarda unos segundos, es porque el backend gratuito de Render está despertando.")
+    st.warning("No hay categorías piloto verificadas disponibles para este supermercado. El catálogo general permanece oculto.")
 else:
-    categories = sorted(list(set(item["category"] for item in catalog)))
-    st.subheader("1. Selecciona los productos de tu despensa")
+    st.subheader("1. Selecciona productos con ficha oficial y precio confirmado")
+    st.caption("El selector y la comparación incluyen solo productos verificados para el supermercado elegido.")
     options_map = {f"{item['name']} — [{item['category']}]": item["id"] for item in catalog}
     selected_items = st.multiselect(
         "Busca o elige los productos que necesitas comprar:",
         options=list(options_map.keys()),
-        default=[list(options_map.keys())[0], list(options_map.keys())[1]] if len(options_map) >= 2 else []
+        default=list(options_map.keys())[:2],
+        key=f"verified_items_{super_id}",
     )
     order_items = []
     if selected_items:
