@@ -1,9 +1,6 @@
 name: Actualizacion Automatica de Precios
 
 on:
-  push:
-    branches:
-      - main
   schedule:
     # Se ejecuta todos los días a las 04:00 AM (hora UTC)
     - cron: '0 4 * * *'
