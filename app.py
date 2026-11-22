@@ -23,12 +23,12 @@ def clp(value):
         return "—"
     return "$" + f"{int(value):,} CLP".replace(",", ".")
 
-st.subheader("Precios y ofertas automáticas · piloto de 7 lácteos y 4 conservas")
+st.subheader("Precios y ofertas automáticas · productos con ficha y precio verificados")
 pilot_prices, pilot_error = get_pilot_prices()
 if pilot_error:
     st.info(pilot_error)
 elif not pilot_prices:
-    st.info("El backend aún no devolvió los once productos del piloto.")
+    st.info("Aún no hay productos con ficha oficial y precio confirmado disponibles.")
 else:
     display_rows = []
     for item in pilot_prices:
