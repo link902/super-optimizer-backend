@@ -1,4 +1,4 @@
-"""Daily, allowlisted price refresh for 23 verified Super-Optimizer rows.
+"""Daily, allowlisted price refresh for 27 verified Super-Optimizer rows.
 
 Only product pages that were manually verified and are pinned below can be fetched.
 Failed, ambiguous, identity-mismatched, or unparseable pages are skipped without
@@ -106,6 +106,10 @@ PILOT = {
     294: {"supermarket_id": 2, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://www.jumbo.cl/leche-semidesc-surlat-b-a-1l-1991553/p", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
     295: {"supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://www.jumbo.cl/leche-colun-semi-descremada-1-litro/p", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
     296: {"supermarket_id": 1, "brand": "Surlat", "brand_aliases": ["surlat"], "source_url": "https://super.lider.cl/ip/leche/leche-semidescremada/00780461747029", "name_tokens": ["leche", "semidescremada"], "size_regex": r"(?<!\d)1\s*(?:l|lt|litro)(?![a-z])", "size_ml": 1000},
+    297: {"supermarket_id": 1, "brand": "Oikos", "brand_aliases": ["oikos"], "source_url": "https://super.lider.cl/ip/yoghurt/yoghurt-griego-natural-sin-azucar-pote/00780295500779", "name_tokens": ["yoghurt", "griego", "natural"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
+    298: {"supermarket_id": 2, "brand": "Oikos", "brand_aliases": ["oikos"], "source_url": "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p", "name_tokens": ["yogurt", "griego", "natural"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
+    299: {"supermarket_id": 1, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://super.lider.cl/ip/yoghurt/yoghurt-origen-natural/00780292001206", "name_tokens": ["yoghurt", "origen", "natural"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
+    300: {"supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://www.jumbo.cl/yogurt-natur-150gr-2065862/p", "name_tokens": ["yogurt", "natural", "colun"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
 }
 PRICE_KEYS = {"price", "saleprice", "currentprice", "sellingprice", "offerprice", "priceamount", "finalprice"}
 REGULAR_KEYS = {"regularprice", "originalprice", "listprice", "oldprice", "wasprice", "previousprice", "pricebeforediscount", "pricebeforediscount"}
