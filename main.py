@@ -41,6 +41,8 @@ VERIFIED_PILOT = {
     298: (2, 78, "Oikos", "Yogurt Griego Natural Sin Endulzar Oikos Danone 150 g", "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p"),
     299: (1, 79, "Colun", "Yoghurt Origen Natural 150 g", "https://super.lider.cl/ip/yoghurt/yoghurt-origen-natural/00780292001206"),
     300: (2, 79, "Colun", "Yogurt Natural Colun Origen 150 g", "https://www.jumbo.cl/yogurt-natur-150gr-2065862/p"),
+    301: (1, 79, "Soprole", "Yoghurt Natural Aflanado 155 g", "https://www.lider.cl/ip/Yoghurt-Natural-Aflanado-155-g/00780290013011"),
+    302: (2, 79, "Soprole", "Yogurt natural aflanado Soprole 155 g", "https://www.jumbo.cl/yoghurt-batido-soprole-155-g-natural/p?idsku=7164"),
 }
 
 def is_verified_pilot(row):
