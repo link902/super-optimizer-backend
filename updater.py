@@ -1,4 +1,4 @@
-"""Daily, allowlisted price refresh for 27 verified Super-Optimizer rows.
+"""Daily, allowlisted price refresh for 29 verified Super-Optimizer rows.
 
 Only product pages that were manually verified and are pinned below can be fetched.
 Failed, ambiguous, identity-mismatched, or unparseable pages are skipped without
@@ -110,6 +110,8 @@ PILOT = {
     298: {"supermarket_id": 2, "brand": "Oikos", "brand_aliases": ["oikos"], "source_url": "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p", "name_tokens": ["yogurt", "griego", "natural"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
     299: {"supermarket_id": 1, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://super.lider.cl/ip/yoghurt/yoghurt-origen-natural/00780292001206", "name_tokens": ["yoghurt", "origen", "natural"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
     300: {"supermarket_id": 2, "brand": "Colun", "brand_aliases": ["colun"], "source_url": "https://www.jumbo.cl/yogurt-natur-150gr-2065862/p", "name_tokens": ["yogurt", "natural", "colun"], "size_regex": r"(?<!\d)150\s*g(?![a-z])", "size_ml": 150},
+    301: {"supermarket_id": 1, "brand": "Soprole", "brand_aliases": ["soprole"], "source_url": "https://www.lider.cl/ip/Yoghurt-Natural-Aflanado-155-g/00780290013011", "name_tokens": ["natural", "aflanado"], "size_regex": r"(?<!\d)155\s*g(?![a-z])", "size_ml": 155},
+    302: {"supermarket_id": 2, "brand": "Soprole", "brand_aliases": ["soprole"], "source_url": "https://www.jumbo.cl/yoghurt-batido-soprole-155-g-natural/p?idsku=7164", "name_tokens": ["natural", "aflanado"], "size_regex": r"(?<!\d)155\s*g(?![a-z])", "size_ml": 155},
 }
 PRICE_KEYS = {"price", "saleprice", "currentprice", "sellingprice", "offerprice", "priceamount", "finalprice"}
 REGULAR_KEYS = {"regularprice", "originalprice", "listprice", "oldprice", "wasprice", "previousprice", "pricebeforediscount", "pricebeforediscount"}
@@ -328,7 +330,7 @@ def main() -> int:
     rows = db.table("products").select("id,supermarket_id,brand,product_name,price,unit_price,source_url,sku").in_("id", list(PILOT)).execute().data
     indexed = {int(row["id"]): row for row in rows}
     if set(indexed) != set(PILOT):
-        print("ERROR: no se recibieron las 23 filas verificadas; no se insertó ninguna fila.")
+        print("ERROR: faltan filas allowlist verificadas; no se actualiza ninguna fila.")
         return 3
 
     session = requests.Session()
