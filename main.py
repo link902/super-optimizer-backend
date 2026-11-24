@@ -43,6 +43,15 @@ VERIFIED_PILOT = {
     300: (2, 79, "Colun", "Yogurt Natural Colun Origen 150 g", "https://www.jumbo.cl/yogurt-natur-150gr-2065862/p"),
     301: (1, 79, "Soprole", "Yoghurt Natural Aflanado 155 g", "https://www.lider.cl/ip/Yoghurt-Natural-Aflanado-155-g/00780290013011"),
     302: (2, 79, "Soprole", "Yogurt natural aflanado Soprole 155 g", "https://www.jumbo.cl/yoghurt-batido-soprole-155-g-natural/p?idsku=7164"),
+    8: (1, 4, "Carozzi", "Spaghetti N°5 400g Carozzi", "https://www.lider.cl/ip/Fideo-Pasta-Spaghetti-N-5-Bolsa-400-g/00780257500443"),
+    16: (2, 4, "Carozzi", "Spaghetti N°5 400g Carozzi", "https://www.jumbo.cl/spaghetti-n-5-carozzi-bolsa-400-g-2/p"),
+    303: (2, 4, "Lucchetti", "Spaghetti N°5 Lucchetti 400 g", "https://www.jumbo.cl/spaghetti-n-5-lucchetti-bolsa-400-g/p"),
+    304: (1, 4, "Lucchetti", "Fideo Pasta Spaghetti N°5 Bolsa 400 g", "https://super.lider.cl/ip/pastas-y-salsas/fideo-pasta-spaghetti-n-5-bolsa/00780250000005"),
+    305: (2, 81, "Carozzi", "Pasta Tallarín N°87 Carozzi 400 g", "https://www.jumbo.cl/tallarines-n-87-carozzi-bolsa-400-g-2/p"),
+    306: (2, 81, "Lucchetti", "Tallarín N°77 Lucchetti 400 g", "https://www.jumbo.cl/tallarines-n-77-lucchetti-bolsa-400-g/p"),
+    307: (1, 81, "Carozzi", "Fideo Pasta Tallarines N°87 Bolsa 400 g", "https://www.lider.cl/ip/Fideo-Pasta-Tallarines-N-87-Bolsa-400-g/00780257500463"),
+    308: (1, 81, "Lucchetti", "Fideo Pasta Tallarines N°77 Bolsa 400 g", "https://super.lider.cl/ip/pastas-y-salsas/fideo-pasta-tallarines-n-77-bolsa/00780250000003"),
+    309: (2, 82, "Cuisine & Co", "Penne Cuisine & Co 100% Trigo Duro 400 g", "https://www.jumbo.cl/penne-100-trigo-duro-c-and-co-400-gr-1922155/p"),
 }
 
 def is_verified_pilot(row):
