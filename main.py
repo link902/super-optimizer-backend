@@ -52,6 +52,13 @@ VERIFIED_PILOT = {
     307: (1, 81, "Carozzi", "Fideo Pasta Tallarines N°87 Bolsa 400 g", "https://www.lider.cl/ip/Fideo-Pasta-Tallarines-N-87-Bolsa-400-g/00780257500463"),
     308: (1, 81, "Lucchetti", "Fideo Pasta Tallarines N°77 Bolsa 400 g", "https://super.lider.cl/ip/pastas-y-salsas/fideo-pasta-tallarines-n-77-bolsa/00780250000003"),
     309: (2, 82, "Cuisine & Co", "Penne Cuisine & Co 100% Trigo Duro 400 g", "https://www.jumbo.cl/penne-100-trigo-duro-c-and-co-400-gr-1922155/p"),
+    2: (1, 1, "Tucapel", "Arroz Grano Largo Grado 1 1kg Tucapel", "https://super.lider.cl/ip/arroz-y-legumbres/arroz-grado-1-grano-largo-bolsa/00780142025014"),
+    241: (1, 1, "Banquete", "Arroz Grado 1 Grano Largo Bolsa. 1 kg", "https://www.lider.cl/ip/arroz-y-legumbres/arroz-grado-1-grano-largo-bolsa/00780311010221"),
+    310: (1, 1, "Miraflores", "Arroz Grado 1 Grano Largo Bolsa. 1 Kg", "https://super.lider.cl/ip/arroz-y-legumbres/arroz-grado-1-grano-largo-bolsa/00780261500655"),
+    226: (2, 1, "Banquete", "Arroz Grado 1 Banquete Premium Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-grado-1-banquete-1-kg-premium-grano-largo-y-ancho/p"),
+    231: (2, 1, "Cuisine & Co", "Arroz Grado 1 Cuisine & Co Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-cuisine-and-co-g1-grano-largo-ancho1kg-1888808/p"),
+    233: (2, 1, "Miraflores", "Arroz Grado 1 Miraflores Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-grado-1-miraflores-1-kg-grano-largo-y-ancho/p"),
+    235: (2, 1, "Tucapel", "Arroz Grado 1 Tucapel Gran Selección Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-grado-1-tucapel-gran-seleccion-grano-largo-y-ancho-1-kg/p"),
 }
 
 def is_verified_pilot(row):
