@@ -59,6 +59,8 @@ VERIFIED_PILOT = {
     231: (2, 1, "Cuisine & Co", "Arroz Grado 1 Cuisine & Co Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-cuisine-and-co-g1-grano-largo-ancho1kg-1888808/p"),
     233: (2, 1, "Miraflores", "Arroz Grado 1 Miraflores Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-grado-1-miraflores-1-kg-grano-largo-y-ancho/p"),
     235: (2, 1, "Tucapel", "Arroz Grado 1 Tucapel Gran Selección Grano Largo y Ancho 1 kg", "https://www.jumbo.cl/arroz-grado-1-tucapel-gran-seleccion-grano-largo-y-ancho-1-kg/p"),
+    311: (1, 83, "Líder", "Cous cous Bolsa 500 g", "https://www.lider.cl/ip/Cous-cous-Bolsa-500-g/00780874360586"),
+    312: (1, 83, "Carozzi", "Cous cous Doypack 250 g", "https://www.lider.cl/ip/Cous-cous-Doypack-250-g/00780257503118"),
 }
 
 def is_verified_pilot(row):
@@ -172,28 +174,32 @@ def optimize_cart(request: OptimizeRequest):
         
         qty = quantities[gid]
         
-        # Producto más barato (canasta óptima)
-        cheapest = min(matches, key=lambda x: x["price"])
-        subtotal_opt = cheapest["price"] * qty
+        # Una unidad de cuscús representa 500 g; ambos formatos son envases enteros.
+        # El resto del catálogo conserva exactamente su lógica por envase.
+        def packs_per_unit(product):
+            return 2 if product["id"] == 312 else 1
+
+        cheapest = min(matches, key=lambda x: x["price"] * packs_per_unit(x))
+        subtotal_opt = cheapest["price"] * qty * packs_per_unit(cheapest)
         total_optimal += subtotal_opt
         optimal_cart.append({
             "Producto": cheapest["product_name"],
             "Marca": cheapest["brand"],
             "Precio Unitario": f"${cheapest['price']:,} CLP",
-            "Cantidad": qty,
+            "Cantidad": qty * packs_per_unit(cheapest),
             "Subtotal": f"${subtotal_opt:,} CLP"
         })
 
         # Producto premium o tradicional (canasta de referencia)
         premium_options = [p for p in matches if p.get("is_premium_tier")]
-        baseline = premium_options[0] if premium_options else max(matches, key=lambda x: x["price"])
-        subtotal_base = baseline["price"] * qty
+        baseline = premium_options[0] if premium_options else max(matches, key=lambda x: x["price"] * packs_per_unit(x))
+        subtotal_base = baseline["price"] * qty * packs_per_unit(baseline)
         total_baseline += subtotal_base
         baseline_cart.append({
             "Producto": baseline["product_name"],
             "Marca": baseline["brand"],
             "Precio Unitario": f"${baseline['price']:,} CLP",
-            "Cantidad": qty,
+            "Cantidad": qty * packs_per_unit(baseline),
             "Subtotal": f"${subtotal_base:,} CLP"
         })
 

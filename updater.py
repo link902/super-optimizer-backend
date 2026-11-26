@@ -128,10 +128,12 @@ PILOT = {
     231: {"supermarket_id": 2, "brand": "Cuisine & Co", "brand_aliases": ["cuisine & co"], "source_url": "https://www.jumbo.cl/arroz-cuisine-and-co-g1-grano-largo-ancho1kg-1888808/p", "name_tokens": ["arroz", "grado 1", "cuisine", "largo", "ancho"], "exclude_tokens": ["integral", "pregraneado", "basmati", "delgado"], "size_regex": r"(?<!\d)1\s*k(?:g|ilo)(?![a-z])", "size_ml": 1000},
     233: {"supermarket_id": 2, "brand": "Miraflores", "brand_aliases": ["miraflores"], "source_url": "https://www.jumbo.cl/arroz-grado-1-miraflores-1-kg-grano-largo-y-ancho/p", "name_tokens": ["arroz", "grado 1", "miraflores", "largo", "ancho"], "exclude_tokens": ["integral", "pregraneado", "basmati", "delgado"], "size_regex": r"(?<!\d)1\s*k(?:g|ilo)(?![a-z])", "size_ml": 1000},
     235: {"supermarket_id": 2, "brand": "Tucapel", "brand_aliases": ["tucapel"], "source_url": "https://www.jumbo.cl/arroz-grado-1-tucapel-gran-seleccion-grano-largo-y-ancho-1-kg/p", "name_tokens": ["arroz", "grado 1", "tucapel", "largo", "ancho"], "exclude_tokens": ["integral", "pregraneado", "basmati", "delgado"], "size_regex": r"(?<!\d)1\s*k(?:g|ilo)(?![a-z])", "size_ml": 1000},
+    311: {"supermarket_id": 1, "brand": "Líder", "brand_aliases": ["lider"], "source_url": "https://www.lider.cl/ip/Cous-cous-Bolsa-500-g/00780874360586", "name_tokens": ["cous", "cous"], "size_regex": r"(?<!\d)500\s*g(?![a-z])", "size_ml": 500},
+    312: {"supermarket_id": 1, "brand": "Carozzi", "brand_aliases": ["carozzi"], "source_url": "https://www.lider.cl/ip/Cous-cous-Doypack-250-g/00780257503118", "name_tokens": ["cous", "cous"], "size_regex": r"(?<!\d)250\s*g(?![a-z])", "size_ml": 250},
 }
 PRICE_KEYS = {"price", "saleprice", "currentprice", "sellingprice", "offerprice", "priceamount", "finalprice"}
 REGULAR_KEYS = {"regularprice", "originalprice", "listprice", "oldprice", "wasprice", "previousprice", "pricebeforediscount", "pricebeforediscount"}
-CONDITIONAL_RE = re.compile(r".{0,70}(?:mi\s*club|club\s*jumbo|tarjeta|con\s+tu\s+tarjeta|comprando\s+\d|segunda\s+unidad|banco\s+).{0,100}", re.I)
+CONDITIONAL_RE = re.compile(r".{0,70}(?:mi\s*club|club\s*jumbo|tarjeta|con\s+tu\s+tarjeta|comprando\s+\d|segunda\s+unidad|banco\s+|\d+\s*(?:x|por)\s*\$\s*[\d.]+).{0,100}", re.I)
 
 
 def norm(value: object) -> str:
