@@ -1,8 +1,12 @@
+import importlib
 import streamlit as st
 import requests
 from expensive_scenario import compare_group, compare_basket, compare_by_100g
 from basket_example import best_example
-from lider_view import show_lider_result
+import lider_view
+
+# Streamlit can retain imported modules after a repository update.
+show_lider_result = importlib.reload(lider_view).show_lider_result
 
 st.set_page_config(page_title="Optimizador de Despensa", page_icon="🛒", layout="wide")
 
