@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 from expensive_scenario import compare_group, compare_basket, compare_by_100g
+from basket_example import best_example
+from lider_view import show_lider_result
 
 st.set_page_config(page_title="Optimizador de Despensa", page_icon="🛒", layout="wide")
 
@@ -77,10 +79,21 @@ else:
     st.subheader("1. Selecciona productos con ficha oficial y precio confirmado")
     st.caption("El selector y la comparación incluyen solo productos verificados para el supermercado elegido.")
     options_map = {f"{('Yogurt natural 150 g' if super_id == 1 and item['id'] == 79 else item['name'])} — [{item['category']}]": item["id"] for item in catalog}
+    example = best_example(pilot_prices, catalog) if super_id == 1 and not pilot_error else None
+    if super_id == 1:
+        st.write('#### Canasta de ejemplo')
+        if example:
+            st.caption('Arroz 1 kg, spaghetti 400 g y tallarines 400 g: una unidad de cada uno. Selección editable con precios generales recientes, cantidades equivalentes y envases enteros.')
+            st.caption('En Líder se excluye Ecoterra: la referencia es la opción más cara verificada entre las marcas restantes del catálogo, no el máximo absoluto. El porcentaje cambia si cambian los precios o editas la canasta.')
+        else:
+            st.warning('No se puede precargar la canasta acordada: faltan pares recientes y comparables o se supera el tope del 30%. Puedes seleccionar productos manualmente.')
+        defaults = [label for label, gid in options_map.items() if example and gid in example['ids']]
+    else:
+        defaults = list(options_map.keys())[:2]
     selected_items = st.multiselect(
         "Busca o elige los productos que necesitas comprar:",
         options=list(options_map.keys()),
-        default=list(options_map.keys())[:2],
+        default=defaults,
         key=f"verified_items_{super_id}",
     )
     order_items = []
@@ -96,12 +109,11 @@ else:
                 order_items.append({"generic_item_id": item_id, "quantity": qty})
         st.write("---")
         scenario = "Solo referencia habitual"
-        if super_id == 1:
-            scenario = st.radio(
-                "Escenario adicional", ["Solo referencia habitual", "Contra la opción más cara"], index=1,
-                help="La referencia habitual se conserva. El escenario adicional muestra extremos por grupo, no un ahorro típico.",
-            )
-        if st.button("🚀 Comparar y Optimizar Canasta", type="primary", use_container_width=True):
+        if super_id == 1 and st.button("🚀 Comparar y Optimizar Canasta", type="primary", use_container_width=True):
+            with st.spinner("Comprobando precios y cantidades equivalentes..."):
+                example_selection = bool(example) and {item['generic_item_id'] for item in order_items} == set(example['ids'])
+                show_lider_result(API_URL, order_items, options_map, excluded_brands=('Ecoterra',), enforce_example_cap=example_selection)
+        if super_id != 1 and st.button("🚀 Comparar y Optimizar Canasta", type="primary", use_container_width=True):
             payload = {"supermarket_id": super_id, "items": order_items}
             with st.spinner("Analizando sustituciones óptimas y calculando ahorro..."):
                 try:
