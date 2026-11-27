@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from supabase import create_client, Client
+from expensive_scenario import FORMATS, TARGET_AMOUNTS
 
 SUPABASE_URL = "https://djxjwxidzjtpgqdcnnlz.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqeGp3eGlkemp0cGdxZGNubmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTkzNTMsImV4cCI6MjEwNjUzNTM1M30.YZvLforZ2ccR22-0MRc8Z82GL5Q-DDhDjP6HWc0CB_A"
@@ -14,6 +15,21 @@ app = FastAPI(title="Grocery Optimizer API")
 # Allowlist: manually verified product rows only. Records outside this list remain
 # in Supabase but are hidden from the selector and excluded from comparisons.
 VERIFIED_PILOT = {
+    331: (1, 65, "Ideal", "Leche Evaporada Lata 390 g", "https://www.lider.cl/ip/Leche-Evaporada-Lata-390-g/00844529102808"),
+    332: (1, 78, "Quillayes", "Yoghurt Griego Sabor Natural no endulzado Pote 400 g", "https://super.lider.cl/ip/yoghurt/yoghurt-griego-sabor-natural-no-endulzado-pote/00780293000473"),
+    333: (1, 79, "Colun", "Yoghurt Colun Origen Natural 900 g", "https://www.lider.cl/ip/Yoghurt-Colun-Origen-Natural-900-g/00780292001105"),
+    334: (1, 79, "Colun", "Yoghurt Origen Sabor Natural Pote 120 g", "https://www.lider.cl/ip/Yoghurt-Origen-Sabor-Natural-Pote-120-g/00780292001058"),
+    3: (1, 2, "Líder", "Leche Natural Entera caja. 1 L", "https://super.lider.cl/ip/leche/leche-natural-entera-caja/00040000720074"),
+    247: (1, 71, "Colun", "Crema de leche natural para batir 200ml Colun", "https://super.lider.cl/ip/cremas/crema-de-leche-natural-para-batir-caja/00780292077728"),
+    322: (1, 76, "Líder", "Leche Semidescremada. 1 L", "https://super.lider.cl/ip/leche/leche-semidescremada/00780870950045"),
+    323: (1, 77, "Líder", "Leche Blanca Descremada Caja 1 L", "https://super.lider.cl/ip/leche/leche-blanca-descremada-caja/00780870950044"),
+    324: (1, 2, "Ecoterra", "Leche de Vacas Libres a Pastoreo Entera 1 L", "https://super.lider.cl/ip/leche/leche-de-vacas-libres-a-pastoreo-entera/00780464445049"),
+    325: (1, 77, "Ecoterra", "Leche Descremada de Vacas Libre Pastoreo 1 L", "https://super.lider.cl/ip/leche/leche-descremada-de-vacas-libre-pastoreo/00780464445052"),
+    326: (1, 81, "Líder", "Fideo Pasta Tallarines N°77 Bolsa 400 g", "https://super.lider.cl/ip/pastas-y-salsas/fideo-pasta-tallarines-n-77-bolsa/00040000726875"),
+    327: (1, 4, "Selección", "Fideo Pasta Spaghetti Bolsa 400 g", "https://www.lider.cl/ip/Fideo-Pasta-Spaghetti-Bolsa-400-g/00780460822181"),
+    328: (1, 74, "Robinson Crusoe", "Atún Agua Drenado 91 g - Neto 140 g", "https://super.lider.cl/ip/conservas/atun-agua/00780462147225"),
+    329: (1, 2, "Loncoleche", "Leche Natural Entera Lonco Leche 1 L", "https://www.lider.cl/ip/Leche-Natural-Entera-Lonco-Leche-1-L/00780291000725"),
+    330: (1, 76, "Loncoleche", "Leche Natural Semidescremada Lonco Leche 1 L", "https://www.lider.cl/ip/Leche-Natural-Semidescremada-Lonco-Leche-1-L/00780291000726"),
     240: (2, 2, "Colun", "Leche Colun Entera 1 L", "https://www.jumbo.cl/leche-entera-colun-caja-1-l-natural/p"),
     246: (1, 71, "Nestlé", "Crema de leche para batir y cocinar 200ml Nestlé", "https://www.lider.cl/ip/cremas/crema-de-leche-para-batir-y-cocinar-caja/00780295002232"),
     250: (2, 71, "Colun", "Crema de leche Colun caja 200ml", "https://www.jumbo.cl/crema-de-leche-colun-caja-200-ml/p"),
@@ -169,15 +185,22 @@ def optimize_cart(request: OptimizeRequest):
 
     for gid in item_ids:
         matches = [p for p in rows if p["generic_item_id"] == gid and p.get("in_stock", True)]
+        # En Líder, una unidad es la cantidad nominal del selector, no un
+        # envase arbitrario. La ficha de 155 g permanece visible, pero no es
+        # equivalente a un pote de 150 g. Para cuscús, 2 x 250 g sí suman 500 g.
+        target = TARGET_AMOUNTS.get(gid) if request.supermarket_id == 1 else None
+        if request.supermarket_id == 1:
+            matches = [p for p in matches if target and p['id'] in FORMATS
+                       and FORMATS[p['id']][0] == gid and target % FORMATS[p['id']][1] == 0]
         if not matches:
+            if request.supermarket_id == 1:
+                raise HTTPException(status_code=404, detail="No hay un formato comparable verificado para el grupo solicitado.")
             continue
-        
+
         qty = quantities[gid]
-        
-        # Una unidad de cuscús representa 500 g; ambos formatos son envases enteros.
-        # El resto del catálogo conserva exactamente su lógica por envase.
+
         def packs_per_unit(product):
-            return 2 if product["id"] == 312 else 1
+            return target // FORMATS[product['id']][1] if target else (2 if product['id'] == 312 else 1)
 
         cheapest = min(matches, key=lambda x: x["price"] * packs_per_unit(x))
         subtotal_opt = cheapest["price"] * qty * packs_per_unit(cheapest)
