@@ -26,10 +26,16 @@ def clp(value):
         return "—"
     return "$" + f"{int(value):,} CLP".replace(",", ".")
 
+# Selector de supermercado
+st.sidebar.header("Supermercado de Destino")
+super_options = {"Líder (Walmart)": 1, "Jumbo (Cencosud)": 2}
+selected_super_name = st.sidebar.selectbox("Selecciona dónde vas a comprar:", list(super_options.keys()))
+super_id = super_options[selected_super_name]
+
 st.subheader("Precios y ofertas · productos con ficha y precio verificados")
 pilot_prices, pilot_error = get_pilot_prices()
 if pilot_error:
-    st.info(pilot_error)
+    st.info('No pudimos cargar los precios. Inténtalo nuevamente.' if super_id == 1 else pilot_error)
 elif not pilot_prices:
     st.info("Aún no hay productos con ficha oficial y precio confirmado disponibles.")
 else:
@@ -47,16 +53,10 @@ else:
             "Consultado (UTC)": item.get("price_checked_at") or "Pendiente de actualización",
         })
     st.dataframe(display_rows, use_container_width=True, hide_index=True)
-    with st.expander("Fichas oficiales de los productos piloto"):
+    with st.expander("Fichas oficiales de los productos" if super_id == 1 else "Fichas oficiales de los productos piloto"):
         for item in pilot_prices:
             store = "Líder" if item.get("supermarket_id") == 1 else "Jumbo"
             st.markdown(f"- {store}: [{item.get('product_name')}]({item.get('source_url')})")
-
-# Selector de supermercado
-st.sidebar.header("Supermercado de Destino")
-super_options = {"Líder (Walmart)": 1, "Jumbo (Cencosud)": 2}
-selected_super_name = st.sidebar.selectbox("Selecciona dónde vas a comprar:", list(super_options.keys()))
-super_id = super_options[selected_super_name]
 
 @st.cache_data(ttl=30)
 def get_catalog(supermarket_id):
@@ -74,19 +74,16 @@ def get_catalog(supermarket_id):
 
 catalog = get_catalog(super_id)
 if not catalog:
-    st.warning("No hay categorías piloto verificadas disponibles para este supermercado. El catálogo general permanece oculto.")
+    st.warning("Por ahora no hay productos verificados disponibles para comparar." if super_id == 1 else "No hay categorías piloto verificadas disponibles para este supermercado. El catálogo general permanece oculto.")
 else:
     st.subheader("1. Selecciona productos con ficha oficial y precio confirmado")
-    st.caption("El selector y la comparación incluyen solo productos verificados para el supermercado elegido.")
+    if super_id != 1:
+        st.caption("El selector y la comparación incluyen solo productos verificados para el supermercado elegido.")
     options_map = {f"{('Yogurt natural 150 g' if super_id == 1 and item['id'] == 79 else item['name'])} — [{item['category']}]": item["id"] for item in catalog}
     example = best_example(pilot_prices, catalog) if super_id == 1 and not pilot_error else None
     if super_id == 1:
-        st.write('#### Canasta de ejemplo')
-        if example:
-            st.caption('Arroz 1 kg, spaghetti 400 g y tallarines 400 g: una unidad de cada uno. Selección editable con precios generales recientes, cantidades equivalentes y envases enteros.')
-            st.caption('En Líder se excluye Ecoterra: la referencia es la opción más cara verificada entre las marcas restantes del catálogo, no el máximo absoluto. El porcentaje cambia si cambian los precios o editas la canasta.')
-        else:
-            st.warning('No se puede precargar la canasta acordada: faltan pares recientes y comparables o se supera el tope del 30%. Puedes seleccionar productos manualmente.')
+        if not example:
+            st.warning('No hay una selección inicial disponible. Elige los productos que quieras comparar.')
         defaults = [label for label, gid in options_map.items() if example and gid in example['ids']]
     else:
         defaults = list(options_map.keys())[:2]

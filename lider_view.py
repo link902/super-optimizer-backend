@@ -21,7 +21,7 @@ def show_lider_result(api_url, order, options, excluded_brands=(), enforce_examp
             raise ValueError('La respuesta de precios no tiene el formato esperado.')
         comparison = compare_selected(before,after,order,excluded_brands=excluded_brands)
     except (requests.exceptions.RequestException, ValueError, KeyError, TypeError) as error:
-        st.warning(f'No se puede calcular una canasta comparable: {error}')
+        st.warning('No se pudo completar la comparación. Vuelve a intentarlo.')
         return
 
     if enforce_example_cap and all(item['quantity'] == 1 for item in order) and comparison['total']:
@@ -29,23 +29,20 @@ def show_lider_result(api_url, order, options, excluded_brands=(), enforce_examp
         exceeds_cap = 10 * total['diferencia'] > 3 * total['referencia']
         exceeds_cap |= any(10 * p['diferencia'] > 3 * p['cara']['subtotal'] for p in comparison['pairs'].values())
         if exceeds_cap:
-            st.warning('Los precios cambiaron y el ejemplo ya no cumple el tope de 30%. Recarga la página para generar otro ejemplo.')
+            st.warning('Los precios cambiaron. Actualiza la página o selecciona otros productos para compararlos.')
             return
 
-    st.subheader('Resultado frente a la opción más cara verificada')
-    if excluded_brands:
-        st.caption('En Líder, referencia: opción más cara verificada del catálogo excluyendo Ecoterra; no es el máximo absoluto. Precios generales, sin aplicar promociones condicionadas; no representa ahorro típico. Al editar la canasta, el porcentaje puede cambiar y superar 30%.')
-    else:
-        st.caption('Precios generales de fichas verificadas, no promociones condicionadas. La diferencia es frente a la opción más cara verificada de cada grupo; no representa ahorro típico ni garantiza los extremos de toda la tienda.')
+    st.subheader('Frente a la opción más cara verificada')
+    offers = []
     total = comparison['total']
     if total:
         percent = 100 * total['diferencia'] / total['referencia'] if total['referencia'] else 0
         percent_text = f'{percent:.2f}'.replace('.', ',') + '%'
-        st.success(f"Diferencia frente a la opción más cara verificada: {clp(total['diferencia'])} ({percent_text})")
+        st.success(f"Ahorro: {clp(total['diferencia'])} ({percent_text})")
         m1,m2,m3=st.columns(3)
-        m1.metric('Referencia más cara verificada',clp(total['referencia']))
-        m2.metric('Canasta optimizada verificada',clp(total['optimizado']))
-        m3.metric('Diferencia frente a esa referencia',clp(total['diferencia']),delta=percent_text)
+        m1.metric('Total de referencia',clp(total['referencia']))
+        m2.metric('Total optimizado',clp(total['optimizado']))
+        m3.metric('Diferencia',clp(total['diferencia']),delta=percent_text)
         reference=[]; optimized=[]
         for item in order:
             pair=comparison['pairs'][item['generic_item_id']]
@@ -62,12 +59,21 @@ def show_lider_result(api_url, order, options, excluded_brands=(), enforce_examp
             st.info('Referencia · opción más cara verificada')
             st.dataframe(reference,use_container_width=True,hide_index=True)
     else:
-        st.warning('No se calcula un total ni porcentaje de canasta: al menos un grupo no tiene dos alternativas equivalentes, vigentes y sin promoción condicionada aplicable. Puedes quitarlo para comparar el resto.')
+        names = [next((n.split(' — ')[0] for n,i in options.items() if i==gid), str(gid))
+                 for gid in comparison['missing']]
+        products = ', '.join(names)
+        st.warning(f'No hay dos alternativas comparables verificadas para {products}; quita estos productos de la selección para comparar el resto.' if len(names) > 1 else f'No hay dos alternativas comparables verificadas para {products}; quita este producto de la selección para comparar el resto.')
 
     st.write('### Detalle por grupo')
     for item in order:
         gid=item['generic_item_id']; qty=item['quantity']; pair=comparison['pairs'][gid]
         name=next((n for n,i in options.items() if i==gid),str(gid))
+        variable = None
+        if not pair:
+            allowed_rows = [r for r in before if (r.get('brand') or '').strip().casefold() not in {b.casefold() for b in excluded_brands}]
+            variable = compare_by_100g(allowed_rows,1,gid,qty)
+            if not variable:
+                continue
         st.write(f'#### {name}')
         if pair:
             st.caption(f"Cantidad equivalente por opción: {pair['cantidad']} {pair['unidad']}, usando envases enteros.")
@@ -82,13 +88,8 @@ def show_lider_result(api_url, order, options, excluded_brands=(), enforce_examp
             for key in ('barata','cara'):
                 row=pair[key]
                 if row['condicional']:
-                    st.caption(f"Beneficio condicionado no aplicado para {row['marca']}: {row['condicional']}. El cobro real puede variar.")
+                    offers.append(f"{row['marca']}: {row['condicional']}")
             st.write(f"Diferencia frente a la opción más cara: **{clp(pair['diferencia'])} ({pair['porcentaje']:.1f}%)**")
-            continue
-        allowed_rows = [r for r in before if (r.get('brand') or '').strip().casefold() not in {b.casefold() for b in excluded_brands}]
-        variable=compare_by_100g(allowed_rows,1,gid,qty)
-        if not variable:
-            st.info('Sin dos alternativas comparables verificadas para esta cantidad. No se calcula la diferencia.')
             continue
         st.caption('Formatos distintos: referencia por 100 g y compras de envases enteros. Los pesos entregados difieren; estos costos no se suman a una canasta equivalente.')
         rows=[]
@@ -103,4 +104,16 @@ def show_lider_result(api_url, order, options, excluded_brands=(), enforce_examp
         for key in ('barata','cara'):
             row=variable[key]
             if row['condicional']:
-                st.caption(f"Promoción condicionada no aplicada para {row['marca']}: {row['condicional']}. El costo real puede variar.")
+                offers.append(f"{row['marca']}: {row['condicional']}")
+
+    with st.expander('Información sobre la comparación'):
+        st.write('Los precios y la disponibilidad pueden cambiar. Se utilizan fichas con stock verificado y precios consultados dentro de las últimas 72 horas.')
+        if excluded_brands:
+            st.write('La referencia es la opción más cara entre los productos comparables verificados en el catálogo, sin Ecoterra. No necesariamente es la más cara de toda la tienda ni representa un ahorro típico.')
+        else:
+            st.write('La referencia es la opción más cara entre los productos comparables verificados en el catálogo. No necesariamente es la más cara de toda la tienda ni representa un ahorro típico.')
+        st.write('La comparación de canasta usa cantidades equivalentes en envases enteros. Las promociones sujetas a condiciones no se aplican; el precio final puede variar si se cumplen sus condiciones.')
+        if offers:
+            st.write('Beneficios condicionados no aplicados:')
+            for offer in dict.fromkeys(offers):
+                st.write(f'• {offer}')
